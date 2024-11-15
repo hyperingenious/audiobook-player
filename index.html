@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body class="p-10">
+    <button
+      class="p-3 mb-2 bg-blue-600 text-white rounded-full create_audiobook"
+    >
+      Create Audiobook
+    </button>
+    <div class="hidden gap-2 flex-col book_input">
+      <input
+        placeholder="Enter book Name"
+        type="text"
+        class="book_name p-2 bg-red-200 rounded-full"
+      />
+      <input
+        type="text"
+        placeholder="Enter Audio book URL"
+        class="book_url p-2 bg-red-200 rounded-full"
+      />
+      <input
+        min="1"
+        max="100"
+        type="number"
+        class="p-2 bg-red-200 rounded-full file_num"
+      />
+      <button class="submit p-3 bg-slate-300 rounded-full">Create book</button>
+    </div>
+  </body>
+</html>
