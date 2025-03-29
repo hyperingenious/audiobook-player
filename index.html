@@ -1,36 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="script.js" defer></script>
-  </head>
-  <body class="p-10">
-    <button
-      class="p-3 mb-2 bg-blue-600 text-white rounded-full create_audiobook"
-    >
-      Create Audiobook
-    </button>
-    <div class="hidden gap-2 flex-col book_input">
-      <input
-        placeholder="Enter book Name"
-        type="text"
-        class="book_name p-2 bg-red-200 rounded-full"
-      />
-      <input
-        type="text"
-        placeholder="Enter Audio book URL"
-        class="book_url p-2 bg-red-200 rounded-full"
-      />
-      <input
-        min="1"
-        max="100"
-        type="number"
-        class="p-2 bg-red-200 rounded-full file_num"
-      />
-      <button class="submit p-3 bg-slate-300 rounded-full">Create book</button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audiobook Manager</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1e1e2e;
+            color: #ffffff;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 10px;
+        }
+        input, button, select {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input, select {
+            background-color: #2c2c3a;
+            color: #ffffff;
+            outline: none;
+        }
+        button {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        }
+        #book-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .book-item {
+            background-color: #3a3a4a;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .book-item img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .book-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .controls button {
+            flex: 1;
+            margin: 5px;
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+        }
+    </style>
+</head>
+<body>
+    <h2>📖 Add a Book</h2>
+    <input type="text" id="book-name" placeholder="Book Name">
+    <input type="text" id="book-author" placeholder="Author Name">
+    <input type="text" id="book-image" placeholder="Image URL">
+    <input type="number" id="book-chapters" placeholder="Number of Chapters">
+    <input type="text" id="book-url" placeholder="Base URL">
+    <button onclick="addBook()">Add Book</button>
+    
+    <h2>📚 Saved Books</h2>
+    <div id="book-list"></div>
+    
+    <h2>🎧 Player</h2>
+    <select id="chapter-select" onchange="changeChapter()"></select>
+    <audio id="audio-player" controls ontimeupdate="saveProgress()"></audio>
+    <div class="controls">
+        <button onclick="seek(-10)">⏪ -10s</button>
+        <button onclick="seek(10)">⏩ +10s</button>
     </div>
-  </body>
+    
+    <script>
+        let books = JSON.parse(localStorage.getItem('books')) || [];
+        let currentBook = null;
+        let audio = document.getElementById('audio-player');
+        let chapterSelect = document.getElementById('chapter-select');
+        
+        function addBook() {
+            let name = document.getElementById('book-name').value;
+            let author = document.getElementById('book-author').value;
+            let image = document.getElementById('book-image').value;
+            let chapters = parseInt(document.getElementById('book-chapters').value);
+            let url = document.getElementById('book-url').value;
+            
+            if (!name || !author || !image || !chapters || !url) return alert('Fill all fields');
+            books.push({ name, author, image, chapters, url, lastChapter: 1, lastTime: 0 });
+            localStorage.setItem('books', JSON.stringify(books));
+            renderBooks();
+        }
+        
+        function renderBooks() {
+            let list = document.getElementById('book-list');
+            list.innerHTML = '';
+            books.forEach((book, index) => {
+                let div = document.createElement('div');
+                div.className = 'book-item';
+                div.innerHTML = `<img src="${book.image}" alt="Book Cover">
+                                 <div class="book-info">
+                                     <strong>${book.name}</strong><br>
+                                     <small>${book.author}</small>
+                                 </div>`;
+                let btn = document.createElement('button');
+                btn.textContent = 'Play';
+                btn.onclick = () => loadBook(index);
+                div.appendChild(btn);
+                list.appendChild(div);
+            });
+        }
+        
+        function loadBook(index) {
+            currentBook = books[index];
+            chapterSelect.innerHTML = '';
+            for (let i = 1; i <= currentBook.chapters; i++) {
+                let option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Chapter ${i}`;
+                if (i === currentBook.lastChapter) option.selected = true;
+                chapterSelect.appendChild(option);
+            }
+            loadAudio(currentBook.lastChapter, currentBook.lastTime);
+        }
+        
+        function loadAudio(chapter, time) {
+            let url = currentBook.url.replace(/\d+\.mp3$/, String(chapter).padStart(2, '0') + '.mp3');
+            audio.src = url;
+            audio.currentTime = time;
+        }
+        
+        function changeChapter() {
+            let chapter = parseInt(chapterSelect.value);
+            loadAudio(chapter, 0);
+        }
+        
+        function saveProgress() {
+            if (!currentBook) return;
+            currentBook.lastChapter = parseInt(chapterSelect.value);
+            currentBook.lastTime = audio.currentTime;
+            localStorage.setItem('books', JSON.stringify(books));
+        }
+        
+        function seek(seconds) {
+            audio.currentTime += seconds;
+        }
+        
+        renderBooks();
+    </script>
+</body>
 </html>
+
