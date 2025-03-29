@@ -96,7 +96,7 @@
     <h2>🎧 Player</h2>
     <select id="chapter-select" onchange="changeChapter()"></select>
     <audio id="audio-player" controls ontimeupdate="saveProgress()">
-            <source type="audio/mpeg" class="source-player">
+            <source type="audio/mpeg" id="source-player">
         </audio>
     <div class="controls">
         <button onclick="seek(-10)">⏪ -10s</button>
