@@ -95,7 +95,9 @@
     
     <h2>🎧 Player</h2>
     <select id="chapter-select" onchange="changeChapter()"></select>
-    <audio id="audio-player" controls ontimeupdate="saveProgress()"></audio>
+    <audio id="audio-player" controls ontimeupdate="saveProgress()">
+            <source type="audio/mpeg" class="source-player">
+        </audio>
     <div class="controls">
         <button onclick="seek(-10)">⏪ -10s</button>
         <button onclick="seek(10)">⏩ +10s</button>
@@ -105,6 +107,7 @@
         let books = JSON.parse(localStorage.getItem('books')) || [];
         let currentBook = null;
         let audio = document.getElementById('audio-player');
+        let source = document.getElementById('source-player');
         let chapterSelect = document.getElementById('chapter-select');
         
         function addBook() {
@@ -155,6 +158,7 @@
         function loadAudio(chapter, time) {
             let url = currentBook.url.replace(/\d+\.mp3$/, String(chapter).padStart(2, '0') + '.mp3');
             audio.src = url;
+            source.src = url;
             audio.currentTime = time;
         }
         
